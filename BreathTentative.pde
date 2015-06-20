@@ -1,4 +1,5 @@
 // coded by Yota Odaka
+// GitHub: https://github.com/62grow2e/BreathTentative
 import processing.video.*;
 Capture cap;
 
