@@ -1,20 +1,32 @@
 // coded by Yota Odaka
 // GitHub: https://github.com/62grow2e/BreathTentative
+
 import processing.video.*;
+
+final int MODE_CENTER = 1;
+final int MODE_MOUSEX = 2;
+final int MODE_SIN = 3;
+//final int MODE_CENTER = 4;
+
+
 Capture cap;
 
-int cap_w = 480; // 自由に変えられます
+int cap_w = 480; // you can change
 int cap_h = cap_w/16*9;
-int fps = 24; // サンプリングする速さ（カメラより早いと解像度が落ちます）
+int fps = 24; // sampling speed
 
 color[][] scannedColors;
 PVector[] scanPos = new PVector[cap_h];
-int num_buffers = 1000; // どのくらい横につなげるか
-int tempBuffer_i = 0;
+int num_buffers = 1000; // width of a jointed view image
+int tempBuffer_i = 0; // 
 
 PGraphics view;
 int view_w = num_buffers;
 int view_h = cap_h;
+
+float t = 0; // this will change while this program is runnning
+float dt = 0.5; // speed of t
+int mode =  MODE_CENTER;
 
 void setup(){
 	background(255);
@@ -45,64 +57,87 @@ void draw(){
 		cap.read();
 	}
 
-	updatePixels(); // 中心のピクセルの取得
-	updateView(); // empty, true --> 左から右, false --> 右から左
-	drawView(0, cap_h); // 取得したピクセルを繋げて描画
+	updatePixels(); 
+	updateView(); // empty, true --> left to right, false --> right to left
+	drawView(0, cap_h);
 	
-	drawCapture(width/2, cap_h/2); // キャプチャ描画
+	drawCapture(width/2, cap_h/2);
 
 	// step buffer index
 	tempBuffer_i++;
 	tempBuffer_i %= num_buffers;
 
-	// 一周で画像保存
+	// save a jointed image as jpeg
 	saveView();
 }
 
-float t = 0;
-boolean mode_constant = true;
-// キャプチャの中心一列を取得
+// key events
+void keyPressed(){
+	if(keyCode == UP){
+		dt+=0.1;
+		println("dt: "+dt);
+	}
+	else if(keyCode == DOWN){
+		dt-=0.1;
+		println("dt: "+dt);
+	}
+	else if(keyCode == MODE_CENTER+48){
+		mode = MODE_CENTER;
+		println("mode: ", mode);
+	}
+	else if(keyCode == MODE_MOUSEX+48){
+		mode = MODE_MOUSEX;
+		println("mode: ", mode);
+	}
+	else if(keyCode == MODE_SIN+48){
+		mode = MODE_SIN;
+		println("mode: ", mode);
+	}
+
+}
+// get color data according as temporary mode
 void updatePixels(){
 	if(tempBuffer_i >= num_buffers)return;
 	cap.loadPixels();
 	for(int i = 0; i < cap_h; i++){
 		int scan_x, scan_y;
-		/*** scan_xとscan_yを変えれば取得する色を変えられます ***/
-		// capの取得したい座標を scan_x, scan_y に入れます
-		
-		/*** X中心座標を取得する例 ***/
-		scan_x = cap.width/2; // 定義域: (0, cap.width]
 
-		/*** マウスのX座標を取得する例 ***/
-		/*
-		int mx = (mouseX>width/2 - cap_w/2)? (mouseX>width/2 + cap_w/2)? cap.width: (int)map(mouseX, width/2-cap_w/2, width/2+cap_w/2, 0, cap.width): 1;
-		scan_x = int(cap.width-mx);
-		*/
+		switch (mode) {
+			case MODE_CENTER :
+			default :	
+				scan_x = cap.width/2; // defined in (0, cap.width]
+			break;
 
-		/*** 左右に単振動 ***/
-		// scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
-		
-		scan_y = i*cap.height/cap_h; // 定義域: [0, cap.height)
+			case MODE_MOUSEX :
+				int mx = (mouseX>width/2 - cap_w/2)? (mouseX>width/2 + cap_w/2)? cap.width: (int)map(mouseX, width/2-cap_w/2, width/2+cap_w/2, 0, cap.width): 1;
+				scan_x = int(cap.width-mx);	
+			break;
 
+			case MODE_SIN :
+				scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
+			break;			
+		}
 
-		// キャプチャから色データを取得する
+		scan_y = i*cap.height/cap_h; // defined in [0, cap.height)
+
+		// get color data
 		scannedColors[tempBuffer_i][i] = cap.get(scan_x, scan_y);
-		// 座標を保存する
+		// hold scanned positions
 		scanPos[i].set((float)scan_x/cap.width*cap_w, (float)scan_y/cap.height*cap_h, 0);
 	}
 
-	t+=.5;
+	t+=dt;
 }
 
-// キャプチャをアップデートする
+// update chapture
 void drawCapture(int center_x, int center_y){
 	imageMode(CENTER);
 	pushMatrix();
 	translate(center_x, center_y);
-	scale(-1, 1); // 見やすいようにキャプチャを反転
+	scale(-1, 1); // mirror image for using easily
 	image(cap, 0, 0, cap_w, cap_h);
 
-	// スキャンしている赤線を引く
+	// draw red points on scanned positions
 	fill(#ff0000);
 	noStroke();
 	for(PVector p: scanPos){
@@ -111,7 +146,7 @@ void drawCapture(int center_x, int center_y){
 	popMatrix();
 }
 
-// 繋げたものを表示
+// draw a jointed view
 void drawView(int left_x, int left_y){
 	imageMode(CENTER);
 	image(view, left_x+view_w/2, left_y+view_h/2);
@@ -122,8 +157,7 @@ void initView(){
 }
 
 
-// 取得したピクセルを繋げます
-// trueか空で 左から右 ,falseで右から左へ
+// update a jointed view
 void updateView(boolean left2right){
 	if(tempBuffer_i >= num_buffers)return;
 	view.beginDraw();
@@ -147,7 +181,7 @@ void updateView(){
 	updateView(true);
 }
 
-// 繋げた画像を保存します
+// save a jointed view
 void saveView(){
 	if(tempBuffer_i != 0)return;
 	String month = (month()<10)?"0"+str(month()): str(month());
