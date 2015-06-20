@@ -59,8 +59,6 @@ void draw(){
 	saveView();
 }
 
-float t = 0;
-boolean mode_constant = true;
 // キャプチャの中心一列を取得
 void updatePixels(){
 	if(tempBuffer_i >= num_buffers)return;
@@ -78,9 +76,6 @@ void updatePixels(){
 		int mx = (mouseX>width/2 - cap_w/2)? (mouseX>width/2 + cap_w/2)? cap.width: (int)map(mouseX, width/2-cap_w/2, width/2+cap_w/2, 0, cap.width): 1;
 		scan_x = int(cap.width-mx);
 		*/
-
-		/*** 左右に単振動 ***/
-		// scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
 		
 		scan_y = i*cap.height/cap_h; // 定義域: [0, cap.height)
 
@@ -91,7 +86,6 @@ void updatePixels(){
 		scanPos[i].set((float)scan_x/cap.width*cap_w, (float)scan_y/cap.height*cap_h, 0);
 	}
 
-	t+=.5;
 }
 
 // キャプチャをアップデートする
