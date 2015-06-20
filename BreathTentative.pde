@@ -31,7 +31,7 @@ void setup(){
 	}
 	cap = new Capture(this, cameras[0]);
 	cap.start();
-	while(!cap.available())println("now loading");
+	while(!cap.available())delay(1);
 
 	int window_w = (view_w>cap_w)?view_w: cap_w;
 	size(window_w, cap_h+view_h);
