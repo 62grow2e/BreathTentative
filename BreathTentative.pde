@@ -31,6 +31,7 @@ void setup(){
 	}
 	cap = new Capture(this, cameras[0]);
 	cap.start();
+	while(!cap.available())println("now loading");
 
 	int window_w = (view_w>cap_w)?view_w: cap_w;
 	size(window_w, cap_h+view_h);
@@ -58,6 +59,8 @@ void draw(){
 	saveView();
 }
 
+float t = 0;
+boolean mode_constant = true;
 // キャプチャの中心一列を取得
 void updatePixels(){
 	if(tempBuffer_i >= num_buffers)return;
@@ -76,6 +79,9 @@ void updatePixels(){
 		scan_x = int(cap.width-mx);
 		*/
 
+		/*** 左右に単振動 ***/
+		// scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
+		
 		scan_y = i*cap.height/cap_h; // 定義域: [0, cap.height)
 
 
@@ -84,6 +90,8 @@ void updatePixels(){
 		// 座標を保存する
 		scanPos[i].set((float)scan_x/cap.width*cap_w, (float)scan_y/cap.height*cap_h, 0);
 	}
+
+	t+=.5;
 }
 
 // キャプチャをアップデートする
