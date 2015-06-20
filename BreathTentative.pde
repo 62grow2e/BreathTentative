@@ -36,7 +36,7 @@ void setup(){
 		scanPos[i] = new PVector(0, 0, 0);
 	}
 
-	// select camera which you use
+	// camera setting
 	String[] cameras = Capture.list();
 	for(int i = 0; i < cameras.length; i++){
 		println(i, cameras[i]);
@@ -45,6 +45,7 @@ void setup(){
 	cap.start();
 	while(!cap.available())delay(1);
 
+	// window setting
 	int window_w = (view_w>cap_w)?view_w: cap_w;
 	size(window_w, cap_h+view_h);
 
@@ -57,10 +58,10 @@ void draw(){
 		cap.read();
 	}
 
+	// main codes
 	updatePixels(); 
 	updateView(); // empty, true --> left to right, false --> right to left
 	drawView(0, cap_h);
-	
 	drawCapture(width/2, cap_h/2);
 
 	// step buffer index
@@ -73,13 +74,32 @@ void draw(){
 
 // key events
 void keyPressed(){
-	if(keyCode == UP){
+	if (keyCode == RIGHT){
 		dt+=0.1;
 		println("dt: "+dt);
 	}
-	else if(keyCode == DOWN){
+	else if (keyCode == LEFT){
 		dt-=0.1;
 		println("dt: "+dt);
+	}
+	else if (keyCode == UP){
+
+	}
+	else if (keyCode == DOWN){
+
+	}
+	else if (key == 'r'){
+		tempBuffer_i = 0;
+		println("restart scan");
+	}
+	else if (key == 'm'){
+		println("==== manual ====");
+		println("[1 ~ 3]: mode select");
+		println("    1: center, 2: mouse x, 3: sin");
+		println("[r]: restart scan ");
+		println("[UP, DOWN]: ");
+		println("[RIGHT, LEFT]: change t speed");
+		println("================");
 	}
 	else if(keyCode == MODE_CENTER+48){
 		mode = MODE_CENTER;
