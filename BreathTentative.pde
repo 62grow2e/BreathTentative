@@ -16,7 +16,7 @@ int view_w = num_buffers;
 int view_h = cap_h;
 
 void setup(){
-	background(0);
+	background(255);
 	frameRate(fps);
 	scannedColors = new color[num_buffers][cap_h];
 	for(int i = 0; i < scanPos.length; i++){
@@ -38,7 +38,7 @@ void setup(){
 }
 
 void draw(){
-	background(0);
+	background(255);
 	if(cap.available() == true){
 		cap.read();
 	}
