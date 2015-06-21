@@ -7,6 +7,8 @@ final int MODE_CENTER = 1;
 final int MODE_MOUSEX = 2;
 final int MODE_SINE = 3;
 final int MODE_SINE_CROSS = 4;
+final int MODE_CENTER_VIRTICAL = 5;
+
 
 
 Capture cap;
@@ -66,8 +68,7 @@ void draw(){
 	drawCapture(width/2, cap_h/2);
 
 	// step buffer index
-	tempBuffer_i++;
-	tempBuffer_i %= num_buffers;
+	tempBuffer_i = (tempBuffer_i+1) % num_buffers;
 
 	// save a jointed image as jpeg
 	saveView();
@@ -99,8 +100,8 @@ void keyPressed(){
 	}
 	else if (key == 'm'){
 		println("==== manual ====");
-		println("[1 ~ 4]: mode select");
-		println("    1: center, 2: mouse x, 3: sine, 4: sine cross");
+		println("[1 ~ 5]: mode select");
+		println("    1: center, 2: mouse x, 3: sine, 4: sine cross, 5: virtical center");
 		println("[d]: change joint direction");
 		println("[r]: restart scan ");
 		println("[UP, DOWN]: ");
@@ -123,6 +124,10 @@ void keyPressed(){
 		mode = MODE_SINE_CROSS;
 		println("mode: sine cross");
 	}
+	else if (keyCode == MODE_CENTER_VIRTICAL+48){
+		mode = MODE_CENTER_VIRTICAL;
+		println("mode: virtical center");
+	}
 
 }
 // get color data according as temporary mode
@@ -130,30 +135,41 @@ void updatePixels(){
 	if(tempBuffer_i >= num_buffers)return;
 	cap.loadPixels();
 	for(int i = 0; i < cap_h; i++){
-		int scan_x, scan_y;
+		float _i;
+		int scan_x; // defined in (0, cap.width]
+		int scan_y; // defined in [0, cap.height)
 
 		switch (mode) {
 			case MODE_CENTER :
 			default :	
-				scan_x = cap.width/2; // defined in (0, cap.width]
+				scan_x = cap.width/2;
+				scan_y = i*cap.height/cap_h;
 			break;
 
 			case MODE_MOUSEX :
 				int mx = (mouseX>width/2 - cap_w/2)? (mouseX>width/2 + cap_w/2)? cap.width: (int)map(mouseX, width/2-cap_w/2, width/2+cap_w/2, 0, cap.width): 1;
-				scan_x = int(cap.width-mx);	
+				scan_x = int(cap.width-mx);
+				scan_y = i*cap.height/cap_h;
 			break;
 
 			case MODE_SINE :
 				scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
+				scan_y = i*cap.height/cap_h;
 			break;
 
 			case MODE_SINE_CROSS :
-				float _i = (float)cap_w/(float)cap_h*(float)i*(float)cap.width/(float)cap_w;
+				_i = (float)cap_w/(float)cap_h*(float)i*(float)cap.width/(float)cap_w;
 				scan_x = int((cap.width/2-1-_i)*sin(radians(t))+cap.width/2);
+				scan_y = i*cap.height/cap_h;
+			break;
+
+			case MODE_CENTER_VIRTICAL :
+				scan_x = int((float)i/(float)cap_h*(float)cap.width);
+				scan_y = cap.height/2;
 			break;			
 		}
 
-		scan_y = i*cap.height/cap_h; // defined in [0, cap.height)
+		
 
 		// get color data
 		scannedColors[tempBuffer_i][i] = cap.get(scan_x, scan_y);
