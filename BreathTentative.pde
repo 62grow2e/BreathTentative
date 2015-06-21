@@ -8,6 +8,7 @@ final int MODE_MOUSEX = 2;
 final int MODE_SINE = 3;
 final int MODE_SINE_CROSS = 4;
 final int MODE_CENTER_VIRTICAL = 5;
+final int MODE_MOUSEY = 6;
 
 
 
@@ -100,8 +101,8 @@ void keyPressed(){
 	}
 	else if (key == 'm'){
 		println("==== manual ====");
-		println("[1 ~ 5]: mode select");
-		println("    1: center, 2: mouse x, 3: sine, 4: sine cross, 5: virtical center");
+		println("[1 ~ 6]: mode select");
+		println("    1: center, 2: mouse x, 3: sine, 4: sine cross, 5: virtical center, 6: mouse y");
 		println("[d]: change joint direction");
 		println("[r]: restart scan ");
 		println("[UP, DOWN]: ");
@@ -127,6 +128,10 @@ void keyPressed(){
 	else if (keyCode == MODE_CENTER_VIRTICAL+48){
 		mode = MODE_CENTER_VIRTICAL;
 		println("mode: virtical center");
+	}
+	else if (keyCode == MODE_MOUSEY+48){
+		mode = MODE_MOUSEY;
+		println("mode: mouse y");
 	}
 
 }
@@ -166,10 +171,14 @@ void updatePixels(){
 			case MODE_CENTER_VIRTICAL :
 				scan_x = int((float)i/(float)cap_h*(float)cap.width);
 				scan_y = cap.height/2;
+			break;
+	
+			case MODE_MOUSEY :
+				int my = (mouseY>height/2)? cap.height: (int)map(mouseY, 0, height/2, 0, cap.height);
+				scan_x = int((float)i/(float)cap_h*(float)cap.width);
+				scan_y = int(my);
 			break;			
 		}
-
-		
 
 		// get color data
 		scannedColors[tempBuffer_i][i] = cap.get(scan_x, scan_y);
