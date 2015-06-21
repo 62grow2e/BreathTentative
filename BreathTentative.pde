@@ -5,8 +5,8 @@ import processing.video.*;
 
 final int MODE_CENTER = 1;
 final int MODE_MOUSEX = 2;
-final int MODE_SIN = 3;
-//final int MODE_CENTER = 4;
+final int MODE_SINE = 3;
+final int MODE_SINE_CROSS = 4;
 
 
 Capture cap;
@@ -19,6 +19,7 @@ color[][] scannedColors;
 PVector[] scanPos = new PVector[cap_h];
 int num_buffers = 1000; // width of a jointed view image
 int tempBuffer_i = 0; // 
+boolean jointDir = true;
 
 PGraphics view;
 int view_w = num_buffers;
@@ -60,7 +61,7 @@ void draw(){
 
 	// main codes
 	updatePixels(); 
-	updateView(); // empty, true --> left to right, false --> right to left
+	updateView(jointDir); // empty, true --> left to right, false --> right to left
 	drawView(0, cap_h);
 	drawCapture(width/2, cap_h/2);
 
@@ -92,26 +93,35 @@ void keyPressed(){
 		tempBuffer_i = 0;
 		println("restart scan");
 	}
+	else if (key == 'd'){
+		jointDir = !jointDir;
+		tempBuffer_i = 0;
+	}
 	else if (key == 'm'){
 		println("==== manual ====");
-		println("[1 ~ 3]: mode select");
-		println("    1: center, 2: mouse x, 3: sin");
+		println("[1 ~ 4]: mode select");
+		println("    1: center, 2: mouse x, 3: sine, 4: sine cross");
+		println("[d]: change joint direction");
 		println("[r]: restart scan ");
 		println("[UP, DOWN]: ");
 		println("[RIGHT, LEFT]: change t speed");
 		println("================");
 	}
-	else if(keyCode == MODE_CENTER+48){
+	else if (keyCode == MODE_CENTER+48){
 		mode = MODE_CENTER;
-		println("mode: ", mode);
+		println("mode: center");
 	}
-	else if(keyCode == MODE_MOUSEX+48){
+	else if (keyCode == MODE_MOUSEX+48){
 		mode = MODE_MOUSEX;
-		println("mode: ", mode);
+		println("mode: mouse x");
 	}
-	else if(keyCode == MODE_SIN+48){
-		mode = MODE_SIN;
-		println("mode: ", mode);
+	else if (keyCode == MODE_SINE+48){
+		mode = MODE_SINE;
+		println("mode: sine");
+	}
+	else if (keyCode == MODE_SINE_CROSS+48){
+		mode = MODE_SINE_CROSS;
+		println("mode: sine cross");
 	}
 
 }
@@ -133,8 +143,13 @@ void updatePixels(){
 				scan_x = int(cap.width-mx);	
 			break;
 
-			case MODE_SIN :
+			case MODE_SINE :
 				scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
+			break;
+
+			case MODE_SINE_CROSS :
+				float _i = (float)cap_w/(float)cap_h*(float)i*(float)cap.width/(float)cap_w;
+				scan_x = int((cap.width/2-1-_i)*sin(radians(t))+cap.width/2);
 			break;			
 		}
 
