@@ -10,7 +10,7 @@ final int MODE_SINE_X_CROSS = 4;
 final int MODE_CENTER_VIRTICAL = 5;
 final int MODE_MOUSEY = 6;
 final int MODE_SINE_Y = 7;
-final int MODE_DOUBLE_SLID_SINE = 8;
+final int MODE_INTERLACE = 8;
 final int MODE_ROTATE = 9;
 
 Capture cap;
@@ -33,7 +33,7 @@ int view_h = cap_h;
 
 float t = 0; // this will change while this program is runnning
 float dt = 0.5; // speed of t
-int mode = 9;//MODE_CENTER;
+int mode = MODE_CENTER;
 
 boolean bRotateDirection = true;
 
@@ -75,6 +75,8 @@ void draw(){
 	drawView(0, cap_h);
 	drawCapture(width/2, cap_h/2);
 
+	drawManual();
+
 	// step buffer index
 	if (bStep)tempBuffer_i = (tempBuffer_i+1) % num_buffers;
 
@@ -93,14 +95,14 @@ void keyPressed(){
 		println("dt: "+dt);
 	}
 	else if (keyCode == UP){
-		if (mode == MODE_DOUBLE_SLID_SINE){
+		if (mode == MODE_INTERLACE){
 			num_slit++;
 			if (num_slit > cap.height/2)num_slit = cap.height/2;
 		}
 
 	}
 	else if (keyCode == DOWN){
-		if (mode == MODE_DOUBLE_SLID_SINE){
+		if (mode == MODE_INTERLACE){
 			num_slit--;
 			if (num_slit < 1)num_slit = 1;
 		}
@@ -118,8 +120,8 @@ void keyPressed(){
 	}
 	else if (key == 'm'){
 		println("==== manual ====");
-		println("[1 ~ 6]: mode select");
-		println("    1: center, 2: mouse x, 3: sine x, 4: sine x cross, 5: virtical center, 6: mouse y, 7: sine y");
+		println("[1 ~ 9]: mode select");
+		println("    1: center x, 2: mouse x, 3: sine x, 4: sine x cross, 5: center y, 6: mouse y, 7: sine y, 8: interlace, 9: rotate");
 		println("[d]: change joint direction");
 		println("[r]: restart scan");
 		println("[s]: pause/resume scan");
@@ -155,8 +157,8 @@ void keyPressed(){
 		mode = MODE_SINE_Y;
 		println("mode: sine y");
 	}
-	else if (keyCode == MODE_DOUBLE_SLID_SINE+48){
-		mode = MODE_DOUBLE_SLID_SINE;
+	else if (keyCode == MODE_INTERLACE+48){
+		mode = MODE_INTERLACE;
 		println("mode: double slit");
 	}
 	else if (keyCode == MODE_ROTATE+48){
@@ -214,7 +216,7 @@ void updatePixels(){
 				scan_y = int((cap.height/2)*sin(radians(t)) +cap.height/2);
 			break;
 
-			case MODE_DOUBLE_SLID_SINE :
+			case MODE_INTERLACE :
 				if (i%num_slit < num_slit/2){
 					scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
 				}
@@ -225,20 +227,9 @@ void updatePixels(){
 			break;
 
 			case MODE_ROTATE :
-				float len_diagonal = dist(0, 0, cap.width, cap.height);
-				float halfLen = len_diagonal/2;
 				_i = (float)i/(float)cap_h*2-1;
 				float e_x = _i*cos(radians(t));
 				float e_y = _i*sin(radians(t));
-				float low = 0, high_w, high_h;
-				/*if (radians(t%180)<atan2(cap.height ,cap.width)||radians(180-t%180)<atan2(cap.height ,cap.width)){
-					high_w = cap.width;
-					high_h = cap.height;
-				}
-				else {
-				*/	high_w = cap.height;
-					high_h = cap.width;
-				//}
 				float _r;
 				if (radians(t%180)<atan2(cap.height ,cap.width)||radians(180-t%180)<atan2(cap.height ,cap.width)){
 					_r = abs(1/cos(radians(t))*cap.width/2);
@@ -326,4 +317,16 @@ void saveView(){
 
 	view.save(filename);
 	println("frame saved as "+filename+".");
+}
+
+void drawManual(){
+	String str = "[1 ~ 9]: mode select\n";
+	str += " 1:center x, 2:mouse x, 3:sine x,\n 4:sine x cross,5:center y, 6:mouse y,\n 7:sine y, 8:interlace ,9:rotate\n";
+	str += "[d]: change joint direction\n";
+	str += "[r]: restart scan\n";
+	str += "[s]: pause/resume scan\n";
+	str += "[UP, DOWN]: \n";
+	str += "[RIGHT, LEFT]: change t speed";
+	fill(50);
+	text(str, 10, 20);
 }
