@@ -5,18 +5,20 @@ import processing.video.*;
 
 final int MODE_CENTER = 1;
 final int MODE_MOUSEX = 2;
-final int MODE_SINE = 3;
-final int MODE_SINE_CROSS = 4;
+final int MODE_SINE_X = 3;
+final int MODE_SINE_X_CROSS = 4;
 final int MODE_CENTER_VIRTICAL = 5;
 final int MODE_MOUSEY = 6;
-
-
+final int MODE_SINE_Y = 7;
+final int MODE_DOUBLE_SLID_SINE = 8;
 
 Capture cap;
 
 int cap_w = 480; // you can change
 int cap_h = cap_w/16*9;
 int fps = 24; // sampling speed
+
+int num_slit = 20;
 
 color[][] scannedColors;
 PVector[] scanPos = new PVector[cap_h];
@@ -31,6 +33,8 @@ int view_h = cap_h;
 float t = 0; // this will change while this program is runnning
 float dt = 0.5; // speed of t
 int mode =  MODE_CENTER;
+
+boolean bStep = true;
 
 void setup(){
 	background(255);
@@ -69,7 +73,7 @@ void draw(){
 	drawCapture(width/2, cap_h/2);
 
 	// step buffer index
-	tempBuffer_i = (tempBuffer_i+1) % num_buffers;
+	if (bStep)tempBuffer_i = (tempBuffer_i+1) % num_buffers;
 
 	// save a jointed image as jpeg
 	saveView();
@@ -86,10 +90,17 @@ void keyPressed(){
 		println("dt: "+dt);
 	}
 	else if (keyCode == UP){
+		if (mode == MODE_DOUBLE_SLID_SINE){
+			num_slit++;
+			if (num_slit > cap.height/2)num_slit = cap.height/2;
+		}
 
 	}
 	else if (keyCode == DOWN){
-
+		if (mode == MODE_DOUBLE_SLID_SINE){
+			num_slit--;
+			if (num_slit < 1)num_slit = 1;
+		}
 	}
 	else if (key == 'r'){
 		tempBuffer_i = 0;
@@ -99,12 +110,16 @@ void keyPressed(){
 		jointDir = !jointDir;
 		tempBuffer_i = 0;
 	}
+	else if (key == 's'){
+		bStep = !bStep;
+	}
 	else if (key == 'm'){
 		println("==== manual ====");
 		println("[1 ~ 6]: mode select");
-		println("    1: center, 2: mouse x, 3: sine, 4: sine cross, 5: virtical center, 6: mouse y");
+		println("    1: center, 2: mouse x, 3: sine x, 4: sine x cross, 5: virtical center, 6: mouse y, 7: sine y");
 		println("[d]: change joint direction");
-		println("[r]: restart scan ");
+		println("[r]: restart scan");
+		println("[s]: pause/resume scan");
 		println("[UP, DOWN]: ");
 		println("[RIGHT, LEFT]: change t speed");
 		println("================");
@@ -117,13 +132,13 @@ void keyPressed(){
 		mode = MODE_MOUSEX;
 		println("mode: mouse x");
 	}
-	else if (keyCode == MODE_SINE+48){
-		mode = MODE_SINE;
-		println("mode: sine");
+	else if (keyCode == MODE_SINE_X+48){
+		mode = MODE_SINE_X;
+		println("mode: sine x");
 	}
-	else if (keyCode == MODE_SINE_CROSS+48){
-		mode = MODE_SINE_CROSS;
-		println("mode: sine cross");
+	else if (keyCode == MODE_SINE_X_CROSS+48){
+		mode = MODE_SINE_X_CROSS;
+		println("mode: sine x cross");
 	}
 	else if (keyCode == MODE_CENTER_VIRTICAL+48){
 		mode = MODE_CENTER_VIRTICAL;
@@ -132,6 +147,14 @@ void keyPressed(){
 	else if (keyCode == MODE_MOUSEY+48){
 		mode = MODE_MOUSEY;
 		println("mode: mouse y");
+	}
+	else if (keyCode == MODE_SINE_Y+48){
+		mode = MODE_SINE_Y;
+		println("mode: sine y");
+	}
+	else if (keyCode == MODE_DOUBLE_SLID_SINE+48){
+		mode = MODE_DOUBLE_SLID_SINE;
+		println("mode: double slit");
 	}
 
 }
@@ -157,12 +180,12 @@ void updatePixels(){
 				scan_y = i*cap.height/cap_h;
 			break;
 
-			case MODE_SINE :
+			case MODE_SINE_X :
 				scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
 				scan_y = i*cap.height/cap_h;
 			break;
 
-			case MODE_SINE_CROSS :
+			case MODE_SINE_X_CROSS :
 				_i = (float)cap_w/(float)cap_h*(float)i*(float)cap.width/(float)cap_w;
 				scan_x = int((cap.width/2-1-_i)*sin(radians(t))+cap.width/2);
 				scan_y = i*cap.height/cap_h;
@@ -177,6 +200,21 @@ void updatePixels(){
 				int my = (mouseY>height/2)? cap.height: (int)map(mouseY, 0, height/2, 0, cap.height);
 				scan_x = int((float)i/(float)cap_h*(float)cap.width);
 				scan_y = int(my);
+			break;	
+	
+			case MODE_SINE_Y :
+				scan_x = int((float)i/(float)cap_h*(float)cap.width);
+				scan_y = int((cap.height/2)*sin(radians(t)) +cap.height/2);
+			break;
+
+			case MODE_DOUBLE_SLID_SINE :
+				if (i%num_slit < num_slit/2){
+					scan_x = int((cap.width/2-1)*sin(radians(t))+cap.width/2);
+				}
+				else {
+					scan_x = int((cap.width/2-1)*sin(radians(t+180))+cap.width/2);
+				}
+				scan_y = i*cap.height/cap_h;
 			break;			
 		}
 
