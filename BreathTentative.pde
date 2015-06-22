@@ -11,6 +11,7 @@ final int MODE_CENTER_VIRTICAL = 5;
 final int MODE_MOUSEY = 6;
 final int MODE_SINE_Y = 7;
 final int MODE_DOUBLE_SLID_SINE = 8;
+final int MODE_ROTATE = 9;
 
 Capture cap;
 
@@ -32,7 +33,9 @@ int view_h = cap_h;
 
 float t = 0; // this will change while this program is runnning
 float dt = 0.5; // speed of t
-int mode =  MODE_CENTER;
+int mode = 9;//MODE_CENTER;
+
+boolean bRotateDirection = true;
 
 boolean bStep = true;
 
@@ -156,6 +159,10 @@ void keyPressed(){
 		mode = MODE_DOUBLE_SLID_SINE;
 		println("mode: double slit");
 	}
+	else if (keyCode == MODE_ROTATE+48){
+		mode = MODE_ROTATE;
+		println("mode: rotate");
+	}
 
 }
 // get color data according as temporary mode
@@ -215,6 +222,33 @@ void updatePixels(){
 					scan_x = int((cap.width/2-1)*sin(radians(t+180))+cap.width/2);
 				}
 				scan_y = i*cap.height/cap_h;
+			break;
+
+			case MODE_ROTATE :
+				float len_diagonal = dist(0, 0, cap.width, cap.height);
+				float halfLen = len_diagonal/2;
+				_i = (float)i/(float)cap_h*2-1;
+				float e_x = _i*cos(radians(t));
+				float e_y = _i*sin(radians(t));
+				float low = 0, high_w, high_h;
+				/*if (radians(t%180)<atan2(cap.height ,cap.width)||radians(180-t%180)<atan2(cap.height ,cap.width)){
+					high_w = cap.width;
+					high_h = cap.height;
+				}
+				else {
+				*/	high_w = cap.height;
+					high_h = cap.width;
+				//}
+				float _r;
+				if (radians(t%180)<atan2(cap.height ,cap.width)||radians(180-t%180)<atan2(cap.height ,cap.width)){
+					_r = abs(1/cos(radians(t))*cap.width/2);
+				}
+				else {
+					_r = abs(1/sin(radians(t))*cap.height/2);
+				}
+				scan_x = int(_r*e_x +cap.width/2);
+				scan_y = int(_r*e_y +cap.height/2);
+			
 			break;			
 		}
 
