@@ -45,7 +45,7 @@ void draw(){
 		cap.read();
 	}
 
-	updatePixels(); // 中心のピクセルの取得
+	scanPixels(); // 中心のピクセルの取得
 	updateView(); // empty, true --> 左から右, false --> 右から左
 	drawView(0, cap_h); // 取得したピクセルを繋げて描画
 	
@@ -60,7 +60,7 @@ void draw(){
 }
 
 // キャプチャの中心一列を取得
-void updatePixels(){
+void scanPixels(){
 	if(tempBuffer_i >= num_buffers)return;
 	cap.loadPixels();
 	for(int i = 0; i < cap_h; i++){
